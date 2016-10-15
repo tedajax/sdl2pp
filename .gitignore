@@ -1,0 +1,10 @@
+Debug/
+Release/
+obj/
+bin/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.VC.db
+*.opendb
+.vs/
