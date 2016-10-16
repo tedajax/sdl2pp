@@ -1,59 +1,49 @@
 workspace "SDL2PP"
     configurations { "Debug", "Release" }
-    platforms { "Win32", "Win64" }
+    platforms { "x86", "x64" }
+
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "On"
+
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "On"
+
+    filter { "platforms:x86", "platforms:x64" }
+        system "windows"
+
+    filter "platforms:x86"
+        architecture "x32"
+
+    filter "platforms:x64"
+        architecture "x64"
+
+    libdirs "external/lib/%{cfg.platform}/%{cfg.buildcfg}"
 
 project "SDL2PP"
     kind "StaticLib"
     language "C++"
     targetdir "bin/%{cfg.buildcfg}"
 
-    includedirs { "external/include", "include" }
+    includedirs { "external/include", "include/sdl2pp" }
     files { "include/sdl2pp/**.h", "src/**.cc" }
     excludes { "src/tests/*" }
-
-    links { "SDL2", "SDL2main" }
-
-    filter "configurations:Debug"
-        defines { "DEBUG" }
-        symbols "On"
-
-    filter "configurations:Release"
-        defines { "NDEBUG" }
-        optimize "On"
-
-    filter { "platforms:Win32", "platforms:Win64" }
-        system "Windows"
-
-    filter "platforms:Win32"
-        libdirs { "external/lib/x86" }
-        architecture "x32"
-
-    filter "platforms:Win64"
-        libdirs { "external/lib/x64" }
-        architecture "x64"
+    links { "SDL2", "SDL2PP" }
 
 project "SDL2PP_Tests"
-    kind "ConsoleApp"
     language "C++"
     targetdir "bin/tests/%{cfg.buildcfg}"
 
     files { "src/tests/**.cc" }
-
-    links { "SDL2PP" }
+    includedirs { "external/include", "include" }
+    links { "SDL2", "SDL2main", "SDL2PP" }
 
     filter "configurations:Debug"
-        defines { "DEBUG" }
-        symbols "On"
+        kind "ConsoleApp"
 
     filter "configurations:Release"
-        defines { "NDEBUG" }
-        optimize "On"
+        kind "WindowedApp"
 
-    filter { "platforms:Win32", "platforms:Win64" }
-        system "Windows"
-
-    filter "platforms:Win32"
-        architecture "x32"
-
-    filter "platforms:Win64"
-        architecture "x64"
+    filter "system:windows"
+        links { "ole32", "oleaut32", "imm32", "winmm", "version" }

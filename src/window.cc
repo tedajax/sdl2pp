@@ -10,7 +10,7 @@ namespace sdl2 {
         m_width(width), m_height(height),
         m_flags(flags),
         m_window(nullptr)
-    {    
+    {
         m_window = SDL_CreateWindow(title, positionX, positionY, width, height, (Uint32)flags);
         ASSERT(m_window, "Unable to create window.");
     }

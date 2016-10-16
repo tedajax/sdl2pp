@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <functional>
 
-#include "sdl2pp/rect.h"
+#include "rect.h"
 
 namespace sdl2 {
     Point::Point(const SDL_Point& sdlPoint) 

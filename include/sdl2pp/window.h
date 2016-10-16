@@ -2,6 +2,8 @@
 
 #include <string>
 
+struct SDL_Window;
+
 namespace sdl2 {
     enum class WindowEventId {
         kNone,
@@ -22,8 +24,9 @@ namespace sdl2 {
     };
 
     struct WindowEvent {
-        WindowEventId 
-    }
+        WindowEventId m_eventId;
+        int32_t m_data[2];
+    };
 
     enum class WindowFlags : uint32_t {
         kFullscreen = 0x00000001,

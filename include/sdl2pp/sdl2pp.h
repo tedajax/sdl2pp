@@ -6,6 +6,8 @@
 
 namespace sdl2 {
     enum class SdlFlags : uint32_t {
+        kNone = 0x00000000,
+        kQuery = 0x00000000,
         kInitTimer = 0x00000001,
         kInitAudio = 0x00000010,
         kInitVideo = 0x00000020,
@@ -17,13 +19,14 @@ namespace sdl2 {
         kInitEverything = 0x00107231,
     };
 
-    class Sdl {
+    class SdlContext {
     public:
-        Sdl(sdl_flags flags = SdlFlags::kInitEverything);
-        ~Sdl();
+        SdlContext(SdlFlags flags = SdlFlags::kInitEverything);
+        ~SdlContext();
 
-        bool init_subsystem(sdl_flags flags);
-        void quit_subsystem(sdl_flags flags);
-        bool was_init(sdl_flags flags);
+        bool init_subsystems(SdlFlags flags);
+        void quit_subsystems(SdlFlags flags);
+        bool query_systems(SdlFlags flags);
+        SdlFlags get_init_systems();
     };
 }
