@@ -6,15 +6,18 @@
 #include "rect.h"
 
 namespace sdl2 {
-    Point::Point(const SDL_Point& sdlPoint) 
+    Point::Point(const SDL_Point& sdlPoint)
         : m_x(sdlPoint.x), m_y(sdlPoint.y) {}
 
-    inline void Point::as_sdl_point(SDL_Point& dest) {
+    inline void Point::as_sdl_point(SDL_Point& dest) const {
         dest.x = m_x;
         dest.y = m_y;
     }
 
-    inline bool Point::in_rect(const Rect& rect) {
+    inline bool Point::in_rect(const Rect& rect) const {
+        if (rect.is_empty()) {
+            return false;
+        }
         return m_x >= rect.get_left() &&
             m_x <= rect.get_right() &&
             m_y >= rect.get_top() &&
@@ -24,17 +27,6 @@ namespace sdl2 {
     Rect::Rect(const SDL_Rect& sdlRect)
         : Rect(sdlRect.x, sdlRect.y, sdlRect.w, sdlRect.h) {}
 
-    inline int rect_get_left(const Rect& r) { return r.get_left(); }
-    inline int rect_get_right(const Rect& r) { return r.get_right(); }
-    inline int rect_get_top(const Rect& r) { return r.get_top(); }
-    inline int rect_get_bottom(const Rect& r) { return r.get_bottom(); }
-
-    inline std::tuple<int, int> get_min_and_max(const Rect& a, const Rect& b, std::function<int(const Rect&)> getMinFunc, std::function<int(const Rect&)> getMaxFunc) {
-        int Amin = std::max(getMinFunc(a), getMinFunc(b));
-        int Amax = std::min(getMaxFunc(a), getMaxFunc(b));
-        return { Amin, Amax };
-    }
-
     inline void Rect::as_sdl_rect(SDL_Rect& dest) {
         dest.x = m_position.get_x();
         dest.y = m_position.get_y();
@@ -42,24 +34,36 @@ namespace sdl2 {
         dest.h = m_height;
     }
 
+    bool Rect::contains_point(const Point& point) const {
+        return point.in_rect(*this);
+    }
+
+    void Rect::enclose(const Point& point) {
+        if (is_empty()) {
+            m_position = point;
+            m_width = 0;
+            m_height = 0;
+            return;
+        }
+
+        int left = std::min(get_left(), point.get_x());
+        int right = std::max(get_right(), point.get_x());
+        int top = std::min(get_top(), point.get_y());
+        int bottom = std::max(get_bottom(), point.get_y());
+        m_position.set(left, top);
+        m_width = right - left;
+        m_height = bottom - top;
+    }
+
     bool Rect::intersects(const Rect& other) const {
         if (is_empty() || other.is_empty()) {
             return false;
         }
 
-        int minV, maxV;
-
-        std::tie(minV, maxV) = get_min_and_max(*this, other, rect_get_left, rect_get_right);
-        if (maxV <= minV) {
-            return false;
-        }
-
-        std::tie(minV, maxV) = get_min_and_max(*this, other, rect_get_top, rect_get_bottom);
-        if (maxV <= minV) {
-            return false;
-        }
-
-        return true;
+        return get_right() >= other.get_left() &&
+            get_left() <= other.get_right() &&
+            get_bottom() >= other.get_top() &&
+            get_top() <= other.get_bottom();
     }
 
     Rect Rect::get_intersection(const Rect& other) const {
@@ -71,24 +75,75 @@ namespace sdl2 {
             return result;
         }
 
-        int minV, maxV;
+        int left = std::max(get_left(), other.get_left());
+        int top = std::max(get_top(), other.get_top());
 
-        std::tie(minV, maxV) = get_min_and_max(*this, other, rect_get_left, rect_get_right);
-        result.m_position.set_x(minV);
-        result.set_width(maxV - minV);
+        int right = std::min(get_right(), other.get_right());
+        int bottom = std::min(get_bottom(), other.get_bottom());
 
-        std::tie(minV, maxV) = get_min_and_max(*this, other, rect_get_top, rect_get_bottom);
-        result.m_position.set_y(minV);
-        result.set_height(maxV - minV);
+        result.set_position(Point(left, top));
+        result.set_width(right - left);
+        result.set_height(bottom - top);
 
         return result;
     }
 
     Rect Rect::get_union(const Rect& other) const {
-        return *this;
+        // Special cases for empty rects
+        if (is_empty()) {
+            if (other.is_empty()) {
+                return Rect();
+            }
+            else {
+                return other;
+            }
+        }
+        else {
+            if (other.is_empty()) {
+                return *this;
+            }
+        }
+
+        Rect result;
+
+        int left = std::min(get_left(), other.get_left());
+        int top = std::min(get_top(), other.get_top());
+
+        int right = std::max(get_right(), other.get_right());
+        int bottom = std::max(get_bottom(), other.get_bottom());
+
+        result.set_position(Point(left, top));
+        result.set_width(right - left);
+        result.set_height(bottom - top);
+
+        return result;
     }
 
-    Rect Rect::get_enclosure(const Point* points, int count, const Rect* clip) const {
-        return *this;
+    Rect Rect::get_enclosure(const Point* points, int count) const {
+        Rect result = *this;
+
+        for (int i = 0; i < count; ++i) {
+            result.enclose(points[i]);
+        }
+
+        return result;
+    }
+
+    Rect Rect::get_enclosure(const Point* points, int count, const Rect& clip, int* const outEnclosedCount /* = nullptr */) const {
+        Rect result = *this;
+
+        int clipCount = 0;
+        for (int i = 0; i < count; ++i) {
+            if (clip.contains_point(points[i])) {
+                result.enclose(points[i]);
+                ++clipCount;
+            }
+        }
+
+        if (outEnclosedCount) {
+            *outEnclosedCount = clipCount;
+        }
+
+        return result;
     }
 }

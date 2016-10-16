@@ -8,12 +8,17 @@ void test_window(test::Test* test) {
     SDL_Delay(1000);
 }
 
+void test_color(test::Test* test) {
+
+}
+
 int main(int argc, char* argv[]) {
-    test::Harness testHarness;
+    test::Harness h;
 
-    testHarness.add_test("Window", test_window);
+    h += { "Window", test_window };
+    h += { "Color", test_color };
 
-    testHarness.execute();
+    h();
 
     return 0;
 }

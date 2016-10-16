@@ -47,17 +47,22 @@ namespace test {
 
     private:
         TestFunc m_function;
-        Result m_result;    
+        Result m_result;
         const char* m_name;
+    };
+
+    struct TestDescriptor {
+        const char* m_name;
+        TestFunc m_function;
     };
 
     class Harness {
     public:
-        void add_test(const char* name, TestFunc function) {
-            m_tests.push_back(Test(name, function));
+        Harness operator+=(const TestDescriptor& descriptor) {
+            m_tests.push_back(Test(descriptor.m_name, descriptor.m_function));
         }
 
-        void execute() {
+        void operator() {
             for (auto test : m_tests) {
                 test.execute();
                 char buffer[256];

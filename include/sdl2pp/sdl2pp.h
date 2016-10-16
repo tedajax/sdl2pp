@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "window.h"
+#include "video.h"
 
 namespace sdl2 {
     enum class SdlFlags : uint32_t {

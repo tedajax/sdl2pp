@@ -12,6 +12,7 @@ workspace "SDL2PP"
 
     filter { "platforms:x86", "platforms:x64" }
         system "windows"
+        defines { "WINDOWS" }
 
     filter "platforms:x86"
         architecture "x32"

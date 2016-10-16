@@ -13,7 +13,7 @@ namespace sdl2 {
     }
 
     bool SdlContext::init_subsystems(SdlFlags flags) {
-        return SDL_InitSubSystem((uint32_t)flags);
+        return SDL_InitSubSystem((uint32_t)flags) == 0;
     }
 
     void SdlContext::quit_subsystems(SdlFlags flags) {

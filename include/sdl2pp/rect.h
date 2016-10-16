@@ -9,30 +9,26 @@ struct SDL_Rect;
 
 namespace sdl2 {
     class Rect;
-    
+
     class Point {
     public:
         Point(int x, int y) : m_x(x), m_y(y) {}
-        Point(const Point& other) : Point(other.m_x, other.m_y) {}
         Point(const std::tuple<int, int>& tuple)
             : Point(std::get<0>(tuple), std::get<1>(tuple)) {}
         Point() : Point(0, 0) {}
         Point(const SDL_Point& sdlPoint);
 
-        Point& operator=(const Point& other) {
-            m_x = other.m_x;
-            m_y = other.m_y;
-            return *this;
-        }
-
         friend bool operator==(const Point& lhs, const Point& rhs);
         friend bool operator!=(const Point& lhs, const Point& rhs);
         friend class Rect;
 
-        inline void as_sdl_point(SDL_Point& dest);
-        
+        inline int& operator[](int index) { return ((int*)this)[index]; }
+        inline const int& operator[](int index) const { return ((int*)this)[index]; }
+
+        inline void as_sdl_point(SDL_Point& dest) const;
+
         // SDL function equivalents
-        inline bool in_rect(const Rect& rect);
+        inline bool in_rect(const Rect& rect) const;
 
         // Accessors/Mutators
         inline std::tuple<int, int> get() const { return { m_x, m_y }; }
@@ -61,30 +57,26 @@ namespace sdl2 {
             : m_position(x, y), m_width(width), m_height(height) {}
         Rect(const Point& position, int width, int height)
             : m_position(position), m_width(width), m_height(height) {}
-        Rect(const Rect& other)
-            : Rect(other.m_position, other.m_width, other.m_height) {}
         Rect()
             : m_position(0, 0), m_width(0), m_height(0) {}
         Rect(const SDL_Rect& sdlRect);
-
-        Rect& operator=(const Rect& other) {
-            m_position = other.m_position;
-            m_width = other.m_width;
-            m_height = other.m_height;
-            return *this;
-        }
 
         friend bool operator==(const Rect& lhs, const Rect& rhs);
         friend bool operator!=(const Rect& lhs, const Rect& rhs);
 
         inline void as_sdl_rect(SDL_Rect& dest);
 
+        bool contains_point(const Point& point) const;
+        // grow to enclose the point
+        void enclose(const Point& point);
+
         // SDL function equivalents
         inline bool is_empty() const;
         bool intersects(const Rect& other) const;
         Rect get_intersection(const Rect& other) const;
         Rect get_union(const Rect& other) const;
-        Rect get_enclosure(const Point* points, int count, const Rect* clip) const;
+        Rect get_enclosure(const Point* points, int count) const;
+        Rect get_enclosure(const Point* points, int count, const Rect& clip, int* const outEnclosedCount = nullptr) const;
 
         // static functions for creating special Rects
         // create a Rect that is the intersection of a and b
@@ -92,7 +84,8 @@ namespace sdl2 {
         // create a Rect that is the union of a and b
         inline static Rect create_union(const Rect& a, const Rect& b);
         // create a Rect that encloses all points
-        inline static Rect create_enclosure(const Rect& r, const Point* points, int count, const Rect* clip);
+        inline static Rect create_enclosure(const Rect& r, const Point* points, int count);
+        inline static Rect create_enclosure(const Rect& r, const Point* points, int count, const Rect& clip, int* const outEnclosedCount = nullptr);
 
         // Accessors/Mutators
         inline const Point& get_position() const { return m_position; }
@@ -135,7 +128,11 @@ namespace sdl2 {
         return a.get_union(b);
     }
 
-    inline Rect Rect::create_enclosure(const Rect& r, const Point* points, int count, const Rect* clip) {
-        return r.get_enclosure(points, count, clip);
+    inline Rect Rect::create_enclosure(const Rect& r, const Point* points, int count) {
+        return r.get_enclosure(points, count);
+    }
+
+    inline Rect Rect::create_enclosure(const Rect& r, const Point* points, int count, const Rect& clip, int* const outEnclosedCount /* = nullptr */) {
+        return r.get_enclosure(points, count, clip, outEnclosedCount);
     }
 }
