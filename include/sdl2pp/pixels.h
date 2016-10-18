@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdinc.h"
-#include "property.h"
+#include <tuple>
 
 namespace sdl2 {
     const uint8_t kAlphaOpaque = 255;
@@ -148,22 +148,80 @@ namespace sdl2 {
     public:
         Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
             : m_r(r), m_g(g), m_b(b), m_a(a) {}
-        Color() : Color(0, 0, 0) {}
+        Color(int r, int g, int b, int a = 255)
+            : Color((uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)a) {}
+        Color() : Color(0, 0, 0, 255) {}
         Color(float r, float g, float b, float a = 1.f)
             : Color(col_ftob(r), col_ftob(g), col_ftob(b), col_ftob(a)) {}
 
         inline std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> get() const { return { m_r, m_g, m_b, m_a }; }
+        inline std::tuple<float, float, float, float> get_floats() const { return { col_btof(m_r), col_btof(m_g), col_btof(m_b), col_btof(m_a) }; }
 
-        inline uint8_t& operator[](int index) { return ((int*)this)[index]; }
-        inline const uint8_t& operator[](int index) const { return ((int*)this)[index]; }
+        inline uint8_t& operator[](int index) { return ((uint8_t*)this)[index]; }
+        inline const uint8_t& operator[](int index) const { return ((uint8_t*)this)[index]; }
+
+        inline uint8_t get_r() const { return m_r; }
+        inline uint8_t get_g() const { return m_g; }
+        inline uint8_t get_b() const { return m_b; }
+        inline uint8_t get_a() const { return m_a; }
+
+        inline void set_r(uint8_t r) { m_r = r; }
+        inline void set_g(uint8_t g) { m_g = g; }
+        inline void set_b(uint8_t b) { m_b = b; }
+        inline void set_a(uint8_t a) { m_a = a; }
+
+        static const Color kWhite, kBlack, kGrey, kClear, kRed, kGreen, kBlue,
+            kCyan, kMagenta, kYellow;
+
+        friend bool operator==(const Color&, const Color&);
+        friend bool operator!=(const Color&, const Color&);
+
+        Color get_union(const Color& other) const;
+        Color get_intersection(const Color& other) const;
 
     private:
         uint8_t m_r, m_g, m_b, m_a;
+    };
 
-    public:
-        Property<uint8_t, &Color::m_r> Red;
-        Property<uint8_t, &Color::m_g> Green;
-        Property<uint8_t, &Color::m_b> Blue;
-        Property<uint8_t, &Color::m_a> Alpha;
+    inline bool operator==(const Color& lhs, const Color& rhs) {
+        return lhs.m_r == rhs.m_r &&
+            lhs.m_g == rhs.m_g &&
+            lhs.m_b == rhs.m_b &&
+            lhs.m_a == rhs.m_a;
+    }
+
+    inline bool operator!=(const Color& lhs, const Color& rhs) {
+        return lhs.m_r != rhs.m_r ||
+            lhs.m_g != rhs.m_g ||
+            lhs.m_b != rhs.m_b ||
+            lhs.m_a != rhs.m_a;
+    }
+
+    inline Color operator+(const Color& lhs, const Color& rhs) {
+        return Color(clamp(lhs.m_r + rhs.m_r, 0, 255),
+            clamp(lhs.m_g + rhs.m_g, 0, 255),
+            clamp(lhs.m_b + rhs.m_b, 0, 255),
+            clamp(lhs.m_a + rhs.m_a, 0, 255));
+    }
+
+    inline Color operator-(const Color& lhs, const Color& rhs) {
+        return Color(clamp(lhs.m_r - rhs.m_r, 0, 255),
+            clamp(lhs.m_g - rhs.m_g, 0, 255),
+            clamp(lhs.m_b - rhs.m_b, 0, 255),
+            clamp(lhs.m_a - rhs.m_a, 0, 255));
+    }
+
+    inline Color operator*(const Color& lhs, const Color& rhs) {
+        float r1, g1, b1, a1;
+        float r2, g2, b2, a2;
+        std::tie(r1, g1, b1, a1) = lhs.get_floats();
+        std::tie(r2, g2, b2, a2) = rhs.get_floats();
+        return Color(r1 * r2, g1 * g2, b1 * b2, a1 * a2);
+    }
+
+    inline Color operator*(const Color& lhs, float rhs) {
+        float r, g, b, a;
+        std::tie(r, g, b, a) = lhs.get_floats();
+        return Color(r * rhs, g * rhs, b * rhs, a);
     }
 }

@@ -60,13 +60,14 @@ namespace test {
     public:
         Harness operator+=(const TestDescriptor& descriptor) {
             m_tests.push_back(Test(descriptor.m_name, descriptor.m_function));
+            return *this;
         }
 
-        void operator() {
-            for (auto test : m_tests) {
-                test.execute();
+        void operator()() {
+            for (auto currentTest : m_tests) {
+                currentTest.execute();
                 char buffer[256];
-                test.snprint(buffer, 256);
+                currentTest.snprint(buffer, 256);
                 printf("%s\n", buffer);
             }
         }

@@ -18,7 +18,8 @@ namespace sdl2 {
         return a + (b - a) * t;
     }
 
-    FORCE_INLINE float clamp(float v, float min, float max) {
+    template <typename T>
+    FORCE_INLINE T clamp(T v, T min, T max) {
         return (v < min) ? min : (v > max) ? max : v;
     }
 
